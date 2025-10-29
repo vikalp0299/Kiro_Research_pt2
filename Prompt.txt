@@ -1,0 +1,417 @@
+####BASIC CONTEXT#######
+Hi kiro, we are creating a class registration app.
+This whole app is divided into 3 major parts
+1. Front End
+2. Back End
+3. Database.
+
+For each part you will follow strict conditions to create the application.
+
+Each part of the work will be broadly divided into the following steps:
+1. Requirements --> This will tell you the technology required to create this specific parts
+2. Functionality --> This will explain in bullet points what does each function should do.
+3. Output --> After each function there will be a heading called output, where the expected output will be explained.
+4. Design --> This will help you understand the structure of the application.
+Your task is to:
+1. Take the requirements, check whether they are present in the system, if not, install them.
+2. After the requirements are installed, using the mcp server get context from context7 for each of these tools.
+3. Next step is to go through the functionalities, create steering documents for each part of the project.
+4. Use context7 to create these functionalities.
+5. Create steering documents.
+6. Output of the functions should match the expected output.
+
+The initial structure of the project is divided into 2 parts:
+/
+|
+|──FrontEnd
+|──BackEnd
+|──Database
+
+####DEVELOPMENT####
+######################################
+
+#####DATABASE#####
+######REQUIREMENTS######
+1. Node.js
+2. aws-sdk
+3. npm 
+4. nodemon 
+
+######FUNCTIONALITIES and OUTPUT######
+
+FUNCTIONALITY 1: CREATE DATABASE
+ - These function should start when the server is started.
+Function 1: createDatabase
+    - Create 3 databases. "studentUserDB", "classDB" and "classRegistrationDB"
+   
+    - Check if these databases already exists first, if they do, return.
+    - The following step are to be followed only if the databases do not exists.
+        -- Create a node.js code using aws-sdk to create the 3 databases.
+        -- UserDB should have the following attributes:
+            -- userID (primary Key) --> number
+            -- username -> string
+            -- fullName -> string
+            -- email --> string
+            -- encrypted password --> encrypted password
+        -- ClassDB should have the following attributes: 
+            -- classId --> string 
+            -- className --> string
+            -- credits --> number
+            -- Description --> string
+                --Dummy Data:
+                {
+                    classID: "IFT 593"  --> every class Id will have either IFT, CSE, CCE, or EEE  followed by random 3 digit number.
+                    className: "Advanced Computer Networks" --> Generate some dummy class name
+                    credits: 4 -> credits can only be 3 or 4.
+                    Description: "this is a description of this class, create a small 3 sentence description
+                }
+        -- ClassRegDB should have the following attributes:
+            -- classId -> string -> foreign key from ClassDB
+            -- userID -> number -> foreign key from UserDB
+            -- className --> string -> foreign key from ClassDB
+            -- registerationState --> enrolled / dropped.
+
+
+
+FUNCTIONALITY 2: EXTRACT DATA
+Function 1: userExistsInDB(username or email) return true or false.
+    - take in username or email, checks "studentUserDB" where any of the two inputs are present.
+        - if the user exists return true
+        - if the user does not exists return false.
+
+Function 2: dispEnrolledClass (userId) return array of class
+    -  takes in userId, get all the rows with matching userID and status as enrolled.
+    -  extract classId and class name pair, return the array of classID className pair.
+
+Function 3: getAllclasses() returns an array of class.
+    - just takes all the classId, className pair from ClassDB and returns.
+
+Function 3: dispAvailableClass(userId) returns array of class
+    - invokes dispEnrolledClass(userId)
+    - invokes getAllclasses()
+    - compares the two array obtained, returns a unique array (remove the subset array obtained from dispEnrolledClass)
+
+Function 4: dispDroppedClass(userId) returns array of class
+    - conditions  
+        userId: userId,
+        registationStatus: "dropped".
+
+FUNCTIONALITY 3: PUSH DATA IN Database
+Function 1: pushUserData()
+    - takes in username, fullname, email, password.
+    - encrypts the password with bcrypt.
+    - checks if email or user exists, returns false.
+    - otherwise, generates a 10 digit userId and push data 
+    for example:
+        user = {
+            userId: 1232802807,
+            fullName: Vikalp Parashar
+            userName: Warlord
+            email: vparash1@asu.edu 
+            password: $2$jsadi12998./dahauwed/ah2
+        }
+
+Function 2: addDummyDataToClassDB()
+    - Only to run when createDatabase() is run. So when in createDatabase() creates classDB after that this function should be invoked from the inside.
+    - Generate a minimum of 5 to maximum of 10 classes.
+    - For classId
+        - It should have have either IFT, CSE, CCE, or EEE  followed by random 3 digit number. For example: IFT 593, CSE 201, EEE 192
+    - Credits 
+        - Randomly pick either 3 or 4.
+    - className
+        - Generate a random name
+    - Description
+        - Generate a description based on the name.
+    - Push the data into classDB
+
+Function 3: pushRegistry()
+    - takes in classId, userId, className and registerStatus
+    - Checks if classId and userId exists.
+    -pushes the data.
+
+    Example:
+        register ={
+            classId: "IFT 402",
+            userId: 1232802807,
+            className: "Introduction to robotics".
+            registerStatus: "enrolled"
+        }
+
+Function 4: updateRegistry()
+    - to change the registerStatus if a student drops from class
+    - change registerStatus: "dropped".
+    - to change dropped back to enrolled if the student re-enrolls.
+
+######DESIGN######
+
+PROJECT STRUCTURE: 
+/
+|
+|──FrontEnd
+|──BackEnd
+|──Database
+    |
+    |-ALL FILES HERE -> NO EXTRA DIRECTORY
+
+WORKFLOW:
+SERVER STARTS
+
+    -> createDatabase() --> already exists, move on
+                --> doesnt exists, create UserDB, classDB, classRegistrationDB
+                                                    |
+                                                    |--invoke addDummyDataToClassDB()
+################################################################################
+
+#####BACK-END#####
+######REQUIREMENTS######
+1.Express.js
+2. npm
+3. nodemon
+4. dependencies from others
+
+######FUNCTIONALITIES and OUTPUT######
+
+FUNCTIONALITY 1: LOGIN, REGISTER & LOGOUT.
+Function 1: registerStudentUser(req, res){
+    - invokes userExistsInDB(username, email).
+    - if exist, return 401. email or username already exists.
+    - else
+        - invoke pushUserData(), get the unique generated id.
+        - generate JWT token using all of the data that we have in user through generateToken() --> this function will be in /──BackEnd/middlewares/auth.js
+        example code:
+            export const generateTokens = (req) => {
+
+                const payload = {
+                    userId: uniqueGenId,
+                    username: req.body.username,
+                    email: req.body.email
+                };
+
+                const accessToken = jwt.sign(payload, JWT_SECRET, { 
+                    expiresIn: JWT_EXPIRES_IN,
+                    issuer: 'school-app',
+                    audience: 'school-app-users'
+                });
+
+                const refreshToken = jwt.sign(
+                    { userId: user._id, type: 'refresh' }, 
+                    JWT_SECRET, 
+                    { 
+                    expiresIn: JWT_REFRESH_EXPIRES_IN,
+                    issuer: 'safe-app',
+                    audience: 'safe-app-users'
+                    }
+                );
+
+                return { accessToken, refreshToken };
+                };
+        - return 200. successful sign up and JWT token 
+}
+Function 2: loginStudentUser (req,res){
+    - invoke userExistsInDB(username, email)
+        -if exists, proceed. get the userId
+        -else return return 404, user or email doesnt exists.
+    - invoke compare =  comparePassword(userID, password)
+        - invokes generateBcryptEncryptPass(password)
+        - invokes getPasswordByUserId(userId)
+        - compare
+            - Matches, return true
+            - return false
+    - if compare == true,
+        - invoke generateToken()
+        - return 200, succesfully logged in
+    - else 
+        - return 400, credentials incorrect. 
+
+}
+
+Function 3: logoutStudentUser (req, res){
+    - JWT token
+        - blacklist it.
+}
+
+FUNCTIONALITY 2:CLASS INFORMATION RETRIEVAL
+Function 1: displayAllAvaliableClasses (req, res){
+    - invoke verify_token() -> to get the userId.
+    - invoke dispAvailableClass(userId).
+        if empty array, return all classes registered. 
+        else send array with 200.
+
+}
+Function 2: getDroppedClasses (req,res){
+    - invoke verify_token
+    - invoke dispDroppedClass(userId);
+        -If empty array, return -> no classes dropped yet.
+        else return array.
+     
+}
+Function 3: getEnrolledClasses (req, res){
+    -invoke verify_token
+    -invoke dispEnrolledClass(userId);
+        -if empty array, return -> no classes enrolled
+        else return array.
+}
+
+FUNCTIONALITY 3: CLASS REGISTRATION
+Function 1: registerClass (req, res){
+    -invoke verify_token() -> get userId
+    - invoke dispEnrolledClass(userId){
+        -if present, return 400, class already registered.
+        else invoke dispDroppedClass(userId){
+            - if present, invoke updateRegistry(classId,userId,status)
+            - else invoke pushRegistry(userId,classId,className, status=enrolled).return 200 succesfully enrolled.
+        }
+    }
+}
+Function 2: De-register(req, res){
+    - invoke verify_token()
+    - invoke dispEnrolledClass(userID){
+        -if absent, return 400, the course is either not registered or dropped.
+        else, invoke updateRegistry(classId, userId, status=dropped)
+    } 
+}
+FUNCTIONALITY 4: HELPER FUNCTIONS:
+File 1:  auth.js 
+    -> have all the functionalities to handle authentication and JWT.
+File 2: logger.js
+    -> logs request and response, in basics single line. Ex: GET /auth/login 10.10.23.12 8080 200 OK 
+    -> color code it.
+File 3: password.js
+    -> handles functionalities for password encryption.
+
+######DESIGN######
+PROJECT STRUCTURE
+/
+|
+|──FrontEnd
+|──BackEnd
+    |
+    |--Controller --> contains the actual functions 
+    |--Router   --> set routes for the api requests
+    |--Middleware --> houses different middlewares like loggers, authHelpers, etc.
+    |--Logs --> store logs.
+
+|──Database
+
+loginController.js -> handles functions related to login,logout, registeration.
+classController.js -> handles functions related to class
+
+loginRouter.js -> routes the request for login functionalities
+classRouter.js -> routes the request for class related functionalities
+
+API path for loginFunctionalities => /api/loginFunc/
+API path for class => /api/classFunc.
+
+
+################################################################################
+
+#####FRONT-END#####
+######REQUIREMENTS######
+1. React
+2. Next.js
+3. HTML
+4. CSS
+5. npm
+6. nodemon.
+
+######FUNCTIONALITIES and OUTPUT######
+
+FUNCTIONALITY 1: LOGIN REGISTRATION & LOGOUT
+
+- Create three functions "userRegisterRequest", "userLoginRequest", "logout".
+- userRegisterRequest:
+-- will take Full name, email, username, and password from the user and send it backend using API. 
+-- will receive a JWT token and store it.
+- userLoginRequest:
+-- can use either email or username for the login process, and they will take a password, send it over to the backend by API.
+-- will receive a JWT token and store it.
+- userLogout:
+-- will remove and delete the jwt token and go to login page.
+-- send the JWT token to blacklist.
+
+OUTPUT 1: API
+- Send input in a JSON format.
+- Use fetch(), method POST.
+
+OUTPUT 2: RESPONSE HANDLING
+- Response will have JWT_Token=, save it on the browser.
+- Depending on the status code, different responses are expected.
+-- 200 -> Functionality executed successful. example: in the logout functionality, 200 will imply successful logout.
+-- 404 -> The resource is not found. Example: if login receives 404, it implies the username or email is incorrect.
+-- Handle other cases using common HTML logic.
+ 
+
+FUNCTIONALITY 2: DISPLAY CLASSES
+
+- Create a navigation panel on the left, with "available classes", "my classes" and "Dropped class" tab.
+- Create a GET function "displayAllAvaliableClasses" to show all available classes to the logged-in user, when the user clicks on available classes tab.
+- Create a GET function "displayEnrolledClasses" to show the classes enrolled by the logged-in user, when the user clicks on the my classes tab.
+- Create a Get function "displayDroppedClasses" to show the classes dropped by the logged-in user, when the user clicks on the dropped classes.
+
+OUTPUT 1: API
+- Use fetch(), method GET.
+
+OUTPUT: RESPONSE HANDLING
+-- 200 implies successful function execution
+-- 404 implies resource not found. In displayEnrolledClasses status 404 will be shown as no classes enrolled, please enroll! <--something like that
+-- Handle other cases using common HTML logic.
+
+FUNCTIONALITY 3: ENROLL AND UNENROLL IN CLASSES.
+- Create an enroll button for each class in the "available classes" tab. 
+- Create an un-enroll button for each class in the "my classes" tab.
+- Create a re-enroll buttion for each class in the "Dropped classes" tab
+- Create a POST function "enrollClass", to enroll the student to the selected class using onClick.
+- Create a POST function "unenrollClass", to unenroll the student from the selected class using onClick.
+- Use the POST function "enrollClass", in the Dropped classes re-enroll button, to again enroll the class.
+OUTPUT: API
+- Send ClassId as input in JSON format
+- Use fetch(), method POST.
+
+OUTPUT: RESPONSE HANDLING
+-- 200 implies successful function execution. 
+-- 404 implies resource not found.
+
+FUNCTIONALITY 4: VERIFICATION.
+- Create a function to check password Strength.
+-- In SignUp page in the password field it take value everytime user types (keyboard stroke), and check against the password policy.
+-- Password should be minimum of 10 characters, should have numbers, alphabets, special character, uppercase lowercases.
+
+- Create a function to check whether a valid email is being entered or not.
+
+OUTPUT: 
+- Show if the password is strong,weak and medium
+- Show if the password has followed the password policy
+- Show if the email entered is a valid email.
+
+######DESIGN######
+PROJECT STRUCTURE:
+/
+|
+|──FrontEnd
+   |
+   |--js
+   |--CSS
+   |--HTML
+
+WORKFLOW:
+Landing page -> login page --> Text fields ->Username or email 
+                                           ->password
+                           --> login button + Sign Up link.
+                                    |            |
+                                    |            |-- Sign Up page --> Text fields    -> Full name
+                                    |                                                -> email
+                                    |                                                -> username
+                                    |                                                -> password
+                                    |                                                -> Verify password
+                                    |                            --> Sign Up button
+                                    |                                   |
+                                    |-----------------------------------|--> Available classes Tab 
+
+
+FORMATTING AND DESIGNS.
+- Use context7 to create a simple yet modern style webpage.
+- Make sure the formatting is correct.
+- Use this website as a reference https://www.arlo.co/course-registration-software?utm_source=google&utm_medium=cpc&utm_campaign=Arlo_Non_Brand_US_CA&utm_term=course%20registration%20system&gad_source=1&gad_campaignid=18459765791&gbraid=0AAAAADvJHlwtTTS3g08DvyHGiTIEPHgqN&gclid=Cj0KCQjw9obIBhCAARIsAGHm1mTEks_IFRLcC1S_6Hg5izUv2IXdXqn-iLz7geHcA_CPlnhLkAVcwXgaAvaPEALw_wcB
+
+                                    
+####SECURITY ASPECTS####
