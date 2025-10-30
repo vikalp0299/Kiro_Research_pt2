@@ -1,0 +1,43 @@
+{
+  "name": "class-registration-system",
+  "version": "1.0.0",
+  "description": "Full-stack Class Registration System with React/Next.js frontend, Express.js backend, and AWS DynamoDB",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd BackEnd && npm install && cd ../FrontEnd && npm install && cd ../Database && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd BackEnd && npm run dev",
+    "dev:frontend": "cd FrontEnd && npm run dev",
+    "dev:database": "cd Database && npm run init",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd BackEnd && npm start",
+    "start:frontend": "cd FrontEnd && npm start",
+    "test": "concurrently \"npm run test:backend\" \"npm run test:frontend\" \"npm run test:database\"",
+    "test:backend": "cd BackEnd && npm test",
+    "test:frontend": "cd FrontEnd && npm test",
+    "test:database": "cd Database && npm test",
+    "setup": "npm run install:all && npm run dev:database",
+    "clean": "rm -rf node_modules BackEnd/node_modules FrontEnd/node_modules Database/node_modules",
+    "health": "curl -f http://localhost:3001/health && curl -f http://localhost:3000",
+    "test:env": "./scripts/test-environment.sh",
+    "test:e2e": "cd e2e-tests && npm test",
+    "test:e2e:watch": "cd e2e-tests && npm run test:watch",
+    "dev:setup": "./scripts/dev-setup.sh",
+    "dev:start": "./scripts/start-dev.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "class-registration",
+    "react",
+    "nextjs",
+    "express",
+    "dynamodb",
+    "aws",
+    "jwt",
+    "full-stack"
+  ],
+  "author": "",
+  "license": "ISC"
+}

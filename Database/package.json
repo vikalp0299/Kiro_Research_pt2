@@ -1,0 +1,22 @@
+{
+  "name": "class-registration-database",
+  "version": "1.0.0",
+  "description": "AWS DynamoDB utilities for Class Registration System",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "init": "node init.js"
+  },
+  "keywords": ["dynamodb", "aws", "database", "class-registration"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
