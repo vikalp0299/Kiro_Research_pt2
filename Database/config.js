@@ -2,8 +2,8 @@ const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
 const path = require('path');
 
-// Load environment variables from Database/.env
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+// Load environment variables from Research_pt2/.env
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Check for required AWS credentials
 function validateAWSCredentials() {
