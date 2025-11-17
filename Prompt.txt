@@ -19,6 +19,12 @@ Your task is to:
 4. Use context7 to create these functionalities.
 5. Create steering documents.
 6. Output of the functions should match the expected output.
+7. For every task that you complete, the final subtask should be testing if the tests work or not?
+8. After every test case create a README.md file with namingformat -> taskName-issue.md 
+9. Put whatever test cases failed or passed and how it was troubleshooted in there, reference line 711 of this prompt.txt
+10. To test backend, use asynchronous test cases, or use curl command on the routes to test routes.
+11. Use nodemon to continuously work and update the server.
+12. Task 1 should be creation of envSetter.py (ref: line 659) and server.js (basic app file) so that it can stay running in background and you can test over it.
 
 The initial structure of the project is divided into 2 parts:
 /
@@ -413,5 +419,311 @@ FORMATTING AND DESIGNS.
 - Make sure the formatting is correct.
 - Use this website as a reference https://www.arlo.co/course-registration-software?utm_source=google&utm_medium=cpc&utm_campaign=Arlo_Non_Brand_US_CA&utm_term=course%20registration%20system&gad_source=1&gad_campaignid=18459765791&gbraid=0AAAAADvJHlwtTTS3g08DvyHGiTIEPHgqN&gclid=Cj0KCQjw9obIBhCAARIsAGHm1mTEks_IFRLcC1S_6Hg5izUv2IXdXqn-iLz7geHcA_CPlnhLkAVcwXgaAvaPEALw_wcB
 
+
+####TESTING ASPECTS#####
+For testing first use context7 to get the context for these testing technology and then create a steering document for them
+and then continue testing
+Jest (v29.7.0) - Test runner & assertions
+Supertest (v6.3.3) - HTTP API testing
+React Testing Library (v13.4.0) - Component testing
                                     
 ####SECURITY ASPECTS####
+
+Following are the guidelines for webApp security.
+
+1. AUTHENTICATION & AUTHORIZATION SECURITY
+
+    - Use bcrypt with a minimum salt rounds of 12 (recommended: 14)
+    - Implement password hashing before database storage
+    - Implement secure password comparison using
+    `bcrypt.compare()`
+    - Enforce password complexity requirements:
+    - Minimum 12 characters (upgrade from current 10)
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number
+    - At least one special character
+    - No common passwords (implement password dictionary check)
+    - Implement password reset functionality with secure tokens (time-limited, single-use)
+    - Rate limit password reset requests to prevent abuse
+
+2. JWT TOKEN SECURITY
+    - Store `JWT_SECRET` in environment variables (`.env` file), NEVER hardcode
+    - Use strong, randomly generated secrets (minimum 256 bits)
+    - Implement short access token expiration (15-30 minutes)
+    - Implement longer refresh token expiration (7-30 days)
+    - Store refresh tokens securely (httpOnly cookies preferred over localStorage)
+    - Implement token blacklisting for logout functionality (as already planned)
+    - Validate token signature, expiration, issuer, and audience on every request
+    - Implement token rotation on refresh
+    - Use HTTPS only for token transmission
+    - Never expose tokens in URL parameters or logs
+
+3. SESSION MANAGEMENT 
+
+    - Implement automatic session timeout after inactivity (30 minutes recommended)
+    - Clear all authentication data on logout
+    - Implement "Remember Me" functionality securely if needed
+    - Detect and prevent concurrent sessions if required
+    - Implement secure session invalidation on password change
+    - DO NOT ALLOW PASSWORD TRIES FOR MORE THAN 5 times, start rate-limit or banning for incremental order of time.
+    - Add two factor authentication
+        - For MFA, take the email id of the user, match the emailId from db, if the email is present, proceed otherwise End
+        - Generate a 6 digit random number, keep it hidden, when user inputs the number:
+            -If it matches, allow login 
+            -If it doesn't match
+                - Allow 3 tries
+                - Give option to send another code to their email.
+                - Store the email address with risk levels or just prevent access until administrator doesn't allow.
+    
+4. DATA VALIDATION
+    - Validate ALL user inputs on both client-side AND server-side
+    - Implement schema validation using libraries (e.g., Joi, express-validator)
+    - Validate email format using proper regex patterns
+    - Validate username format (alphanumeric, length constraints)
+    - Sanitize all inputs to prevent code injection
+    - Implement strict type checking for all inputs
+    - Validate file uploads (if implemented later) for type, size, and content
+    - Never trust client-side validation alone
+
+5. SQL/NoSQL INJECTION PREVENTION
+
+    - Use parameterized queries or prepared statements for ALL database operations
+    - Never concatenate user input directly into database queries
+    - Use AWS SDK's built-in parameter binding
+    - Implement input sanitization before database operations
+    - Use ORM/ODM libraries with proper escaping mechanisms
+    - Validate and sanitize `classId`,`userId` before using in queries
+
+6. CROSS-SITE SCRIPTING (XSS) PREVENTION
+- Sanitize all user-generated content before rendering
+- Implement Content Security Policy (CSP) headers
+- Escape HTML special characters in user inputs
+- Use React's built-in XSS protection (avoid `dangerouslySetInnerHTML`)
+- Validate and sanitize class descriptions and names
+- Implement output encoding for all dynamic content
+
+7. API SECURITY
+    - Implement rate limiting on all endpoints (e.g., 100 requests per 15 minutes)
+    - Add stricter rate limits on authentication endpoints (e.g., 5 login attempts per 15 minutes)
+    - Implement CORS (Cross-Origin Resource Sharing) with specific allowed origins
+    - Use HTTPS/TLS for all API communications (minimum TLS 1.2)
+    - Implement API versioning for maintainability
+    - Add request size limits to prevent DoS attacks
+    - Implement request timeout limits
+    - Use security headers (Helmet.js for Express):
+        `X-Content-Type-Options: nosniff`
+        `X-Frame-Options: DENY`
+        `X-XSS-Protection: 1; mode=block`
+        `Strict-Transport-Security`
+        `Content-Security-Policy`
+
+8. AUTHENTICATION MIDDLEWARE
+    - Verify JWT token on EVERY protected route
+    - Implement proper error handling without exposing sensitive information
+    - Check token against blacklist on every request
+    - Validate user permissions for each operation
+    - Implement middleware execution order correctly
+    - Log authentication failures for monitoring
+
+9. ENDPOINT PROTECTION
+    - Protect ALL class registration endpoints with authentication
+    - Implement authorization checks (users can only modify their own registrations)
+    - Validate `userId` from JWT matches the requested operation
+    - Prevent enumeration attacks (don't reveal if user/email exists during login)
+    - Implement CSRF protection for state-changing operations
+
+10. DATABASE ACCESS CONTROL 
+
+    - Use AWS IAM roles with least privilege principle
+    - Create separate database users for different operations
+    - Never use root/admin credentials in application code
+    - Store database credentials in environment variables
+    - Implement database connection encryption (SSL/TLS)
+    - Use VPC security groups to restrict database access
+    - Regularly rotate database credentials
+    - Enable database audit logging
+
+11. DATA PROTECTION
+
+    - Encrypt sensitive data at rest (if storing additional PII later)
+    - Implement database backups with encryption
+    - Use AWS DynamoDB encryption features
+    - Implement soft deletes instead of hard deletes for audit trails
+    - Sanitize database error messages before sending to client
+    - Prevent mass assignment vulnerabilities
+    - Implement transaction management for data consistency
+
+12.  QUERY PROTECTION
+
+    - Validate foreign key relationships before operations
+    - Implement existence checks before updates/deletes
+    - Use batch operations securely
+    - Limit query result sizes to prevent data leakage
+    - Implement pagination for large datasets
+    - Never expose internal database IDs directly if possible
+
+13. CLIENT-SIDE SECURITY
+
+    - Never store sensitive data in localStorage (use httpOnly cookies for tokens if possible)
+    - If using localStorage for tokens, implement additional security measures
+    - Implement proper token storage and retrieval
+    - Clear sensitive data from memory after use
+    - Validate all inputs before sending to backend
+    - Implement proper error handling without exposing system details
+    - Use environment variables for API endpoints
+    - Implement secure routing (protect routes requiring authentication)
+    - Prevent clickjacking with proper CSP headers
+
+14. DEPENDENCY SECURITY
+
+    - Regularly update all npm packages
+    - Use`npm audit` to check for vulnerabilities
+    - Implement `package-lock.json` or `yarn.lock`
+    - Avoid using packages with known vulnerabilities
+    - Review dependencies before adding to project
+    - Use Dependabot or similar tools for automated updates
+
+15. SECURITY LOGGING
+    - Log ALL authentication attempts (success and failure)
+    - Log ALL authorization failures
+    - Log suspicious activities (multiple failed logins, unusual patterns)
+    - Include timestamp, IP address, user identifier in logs
+    - NEVER log sensitive data (passwords, tokens, PII)
+    - Implement log rotation and secure storage
+    - Use structured logging format (JSON)
+    - Store logs in the `/BackEnd/Logs` directory as per design
+
+16. MONITORING AND ALERTING
+    - Monitor for brute force attacks
+    - Implement alerts for suspicious activities
+    - Track rate limit violations
+    - Monitor for SQL injection attempts
+    - Set up alerts for application errors
+    - Implement health check endpoints (without exposing sensitive info)
+
+17. SECURE ERROR HANDLING
+    - Implement centralized error handling middleware
+    - Never expose stack traces to clients
+    - Return generic error messages to users
+    - Log detailed errors server-side only
+    - Use appropriate HTTP status codes
+    - Avoid revealing system architecture in errors
+    - Implement different error messages for development vs production
+
+18. INFORMATION DISCLOSURE PREVENTION
+    - Remove or disable server signature headers
+    - Don't expose technology stack in responses
+    - Avoid verbose error messages
+    - Remove comments from production code
+    - Don't expose database schema information
+    - Sanitize all response data
+    - Implement proper API documentation without exposing vulnerabilities
+
+19. CODE SECURITY PRACTICES
+    - Implement security code reviews
+    - Use ESLint with security plugins
+    - Follow OWASP Top 10 guidelines
+    - Implement principle of least privilege throughout code
+    - Avoid `eval()`and similar dangerous functions
+    - Use strict mode in JavaScript
+    - Implement proper access control checks
+    - Comment security-critical code sections
+
+20. 19. ENVIRONMENT CONFIGURATION
+- Use
+`
+.env
+` files for all sensitive configuration
+- Add `
+.env
+` to
+`
+.gitignore
+` (NEVER commit secrets)
+- Use different credentials for development, testing, and production
+- Implement environment variable validation on startup
+- Document all required environment variables
+**Example
+```
+JWT_SECRET=your-256-bit-secret-here
+JWT_EXPIRES_IN=30m
+JWT_REFRESH_EXPIRES_IN=7d
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_REGION=us-east-1
+
+NODE_ENV=development
+PORT=3000
+
+Ask user to run envSetter.py file to fill in these values, if not already present.
+As they are critical to the application even working.
+
+For example if a user runs: npm run dev and this file is not initialized, stop execution and 
+prompt the user to run python3 envSetter.py 
+
+envSetter.py is an basic interactive file that will take user input and create a .env file through that input.
+
+21. TESTING & VALIDATION
+    - Implement security testing in CI/CD pipeline
+    - Test authentication and authorization flows
+    - Perform input validation testing
+    - Test rate limiting functionality
+    - Implement automated security scanning
+    - Conduct manual security reviews
+    - Test error handling scenarios
+
+Before deploying, verify:
+- [ ] All passwords are hashed with bcrypt (salt rounds >= 12)
+- [ ] JWT secrets are in environment variables
+- [ ] All API endpoints have authentication/authorization
+- [ ] Input validation implemented on both client and server
+- [ ] Rate limiting configured on all endpoints
+- [ ] HTTPS enforced for all communications
+- [ ] Security headers configured (use Helmet.js)
+- [ ] CORS properly configured
+- [ ] Error messages don't expose sensitive information
+- [ ] Logging implemented (without logging sensitive data)
+- [ ] Database credentials secured in environment variables
+- [ ] Token blacklisting working for logout
+- [ ] SQL/NoSQL injection prevention implemented
+- [ ] XSS prevention measures in place
+- [ ] `.env` file added to `.gitignore`
+- [ ] `npm audit` shows no high/critical vulnerabilities
+- [ ] Password complexity requirements enforced (12+ chars)
+- [ ] Session timeout implemented
+- [ ] All user inputs sanitized and validated
+
+
+**Remember:**
+-
+**Defense in Depth**: Implement security at every layer
+-
+**Least Privilege**: Grant minimum necessary permissions
+-
+**Fail Securely**: Default to denying access when errors occur
+-
+**Keep it Simple**: Complex security is hard to maintain
+-
+**Never Trust Input**: Always validate and sanitize
+-
+**Security by Design**: Build security in from the start, not as an afterthought
+
+
+
+####ISSUES and RESOLUTIONS####
+
+- Create a fix-summary folder.
+- Whatever issues you face while creating the app, make a one sentence info about it
+- Show troubleshooting methodology
+- Give a one line prompt so that this issue can be remediated in the next iteration without 
+you troubleshooting
+
+    ###STUCTURE###
+     1. Issues Faced:
+     // Enter issue Faced
+     2. Troubleshooting:
+     // Enter everything you have tried in bullet points
+     3. Improvement prompt
+     // Generate a prompt that you can use in next iteration in the prompt.txt, that will stop this issue
+     // and will also stop you from hallucinating.

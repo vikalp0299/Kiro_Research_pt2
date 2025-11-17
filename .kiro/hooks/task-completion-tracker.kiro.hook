@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Task Completion Tracker",
+  "description": "Monitors for task completion messages and creates issue documentation before moving to the next task",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A task has been completed. Before proceeding to the next task:\n\n1. Create a file named ${taskName}Issue.md in the root directory with the following structure:\n\n###STRUCTURE###\n1. Issues Faced:\n   // Document any issues encountered while creating the app in one sentence each\n\n2. Troubleshooting:\n   // List everything you tried in bullet points\n   - Attempt 1\n   - Attempt 2\n   - etc.\n\n3. Improvement prompt:\n   // Generate a clear, specific prompt that can be used in the next iteration to prevent this issue from recurring and to prevent hallucination. This prompt should be actionable and added to prompt.txt\n\nAfter creating the ${taskName}Issue.md file:\n- Review what the next task should be\n- Dont ask the user just continue with the next task, even for the sub-tasks , I want total autonmation\n- Execute the next task with the lessons learned from the issue documentation\n- Set the task as complete in task.md"
+  }
+}
